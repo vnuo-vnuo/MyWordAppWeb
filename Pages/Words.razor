@@ -1,0 +1,60 @@
+﻿@page "/words"
+@using Blazored.LocalStorage
+@inject ILocalStorageService LocalStorage
+@inject IJSRuntime JS
+
+<div class="container mt-4" style="max-width: 600px; margin: auto; font-family: sans-serif;">
+
+    <!-- 顶部返回按钮 -->
+    <div class="d-flex justify-content-start mb-3">
+        <a href="" class="btn btn-outline-secondary btn-sm">🔙 返回背单词</a>
+    </div>
+
+    <h2 class="text-center mb-4">📚 我的单词表</h2>
+
+    @if (isLoading)
+    {
+        <p class="text-center text-muted">正在加载词库...</p>
+    }
+    else if (words.Count == 0)
+    {
+        <p class="text-center text-danger">词库为空，请先返回主页加载。</p>
+    }
+    else
+    {
+        <div class="list-group">
+            @foreach (var w in words)
+            {
+                <div class="list-group-item d-flex justify-content-between align-items-center mb-2 shadow-sm" style="border-radius: 8px; border: 1px solid #eee;">
+                    <div>
+                        <h5 class="mb-1 fw-bold text-dark">@w.Spelling</h5>
+                        <small class="text-secondary">@w.Meaning</small>
+                    </div>
+                    <button class="btn btn-sm btn-outline-primary" @onclick="() => Speak(w.Spelling)">
+                        🔊 发音
+                    </button>
+                </div>
+            }
+        </div>
+    }
+</div>
+
+@code {
+    private List<Word> words = new();
+    private bool isLoading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var savedWords = await LocalStorage.GetItemAsync<List<Word>>("my_words");
+        if (savedWords != null)
+        {
+            words = savedWords;
+        }
+        isLoading = false;
+    }
+
+    private async Task Speak(string text)
+    {
+        await JS.InvokeVoidAsync("speak", text);
+    }
+}
